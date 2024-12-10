@@ -1,6 +1,6 @@
 {
-    "short_name": "ShaderCreator",
-    "name": "Dynamic Shader Creator PWA",
+    "short_name": "DreamShader",
+    "name": "DreamShader - Dynamic Shader Creator PWA",
     "icons": [
       {
         "src": "assets/icons/icon-192x192.png",

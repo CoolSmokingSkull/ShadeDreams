@@ -3,15 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shader Creator PWA</title>
+  <title>DreamShader</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#121212">
 </head>
 <body>
   <header>
-    <h1>Shader Creator</h1>
-    <button id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+    <h1>DreamShader</h1>
+    <div class="toolbar">
+      <label for="shader-select">Select Shader:</label>
+      <select id="shader-select">
+        <option value="intricate">Intricate Shader</option>
+        <option value="procedural">Procedural Shader</option>
+        <option value="particle">Particle Shader</option>
+      </select>
+      <button id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+    </div>
   </header>
 
   <main>
@@ -27,7 +35,7 @@
   </main>
 
   <footer>
-    <p>&copy; 2024 Shader Creator</p>
+    <p>&copy; 2024 DreamShader</p>
   </footer>
 
   <script src="main.js"></script>

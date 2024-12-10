@@ -12,6 +12,7 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden; /* Prevent body scrolling */
   }
   
   header, footer {
@@ -25,6 +26,26 @@
   header h1 {
     font-size: 1.5em;
     color: #00ffff;
+  }
+  
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .toolbar label {
+    color: #ffffff;
+    font-size: 0.9em;
+  }
+  
+  .toolbar select {
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    background-color: #333;
+    color: #00ffff;
+    cursor: pointer;
   }
   
   #fullscreen-btn {
@@ -44,6 +65,7 @@
     flex: 1;
     display: flex;
     overflow: hidden;
+    height: calc(100vh - 120px); /* Adjust based on header and footer height */
   }
   
   aside#controls {
@@ -93,12 +115,27 @@
     display: block;
   }
   
+  /* Prevent body scrolling and allow only controls to scroll */
+  main {
+    overflow: hidden;
+  }
+  
+  aside#controls {
+    overflow-y: auto;
+  }
+  
   footer p {
     font-size: 0.9em;
     color: #888;
   }
   
   /* Responsive Design */
+  @media (max-width: 1024px) {
+    aside#controls {
+      width: 300px;
+    }
+  }
+  
   @media (max-width: 768px) {
     aside#controls {
       width: 250px;
@@ -111,8 +148,10 @@
       align-items: flex-start;
     }
   
-    #fullscreen-btn {
-      align-self: flex-end;
+    .toolbar {
+      width: 100%;
+      justify-content: space-between;
+      margin-top: 10px;
     }
   
     aside#controls {
@@ -124,6 +163,11 @@
   
     main {
       flex-direction: column;
+      height: calc(100vh - 150px); /* Adjust based on header and footer height */
+    }
+  
+    section#preview {
+      flex: 1;
     }
   }
   
@@ -166,5 +210,19 @@
     border: none;
     height: 30px;
     cursor: pointer;
+  }
+  
+  /* Scrollbar Styles for Controls */
+  #controls::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  #controls::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+  
+  #controls::-webkit-scrollbar-thumb {
+    background-color: #00ffff;
+    border-radius: 4px;
   }
   
