@@ -1,14 +1,17 @@
 // service-worker.js
 
-const CACHE_NAME = 'shader-creator-cache-v2';
+const CACHE_NAME = 'dreamshader-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css',
   '/main.js',
   '/manifest.json',
-  '/assets/icons/icon-192x192.png',
-  '/assets/icons/icon-512x512.png'
+  '/service-worker.js',
+  '/js/gif.worker.js', // Ensure this path matches where you placed gif.worker.js
+  '/assets/icons/DS192.png',
+  '/assets/icons/DS512.png',
+  // Included any other assets you want to cache
 ];
 
 // Install Event - Caching Assets

@@ -61,9 +61,8 @@ const shaders = {
 
       // Function to create noise
       float noise(vec2 st) {
-          return fract(sin(dot(st.xy,
-                               vec2(12.9898,78.233))) *
-                       43758.5453123);
+          return fract(sin(dot(st.xy, vec2(12.9898,78.233))) *
+                     43758.5453123);
       }
 
       // Function to create smooth noise
@@ -124,7 +123,7 @@ const shaders = {
       }
     `
   },
-  procedural: {
+  fire: {
     vertex: `
       attribute vec4 a_position;
       void main() {
@@ -138,93 +137,53 @@ const shaders = {
       uniform vec2 u_resolution;
 
       // Adjustable Parameters
-      uniform float u_param1;
-      uniform float u_param2;
-      uniform float u_param3;
-      uniform float u_param4;
-      uniform float u_param5;
-      uniform float u_param6;
-      uniform float u_param7;
-      uniform float u_param8;
-      uniform float u_param9;
-      uniform float u_param10;
-      uniform float u_param11;
-      uniform float u_param12;
-      uniform float u_param13;
-      uniform float u_param14;
-      uniform float u_param15;
-      uniform float u_param16;
-      uniform float u_param17;
-      uniform float u_param18;
-      uniform float u_param19;
-      uniform float u_param20;
-      uniform float u_param21;
-      uniform float u_param22;
-      uniform float u_param23;
-      uniform float u_param24;
-      uniform float u_param25;
+      uniform float u_param1_fire; // Time Speed
+      uniform float u_param2_fire; // Base Temperature
+      uniform float u_param3_fire; // Flame Height
+      uniform float u_param4_fire; // Flicker Intensity
+      uniform float u_param5_fire; // Flame Width
+      uniform float u_param6_fire; // Noise Scale
+      uniform float u_param7_fire; // Noise Intensity
+      uniform float u_param8_fire; // Color Shift Speed
+      uniform float u_param9_fire; // Brightness Adjustment
+      uniform float u_param10_fire; // Gamma Correction
 
-      // Simplex Noise Function
-      float snoise(vec2 v){
-        const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
-                            0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
-                            -0.577350269189626, // -1.0 + 2.0 * C.x
-                            0.024390243902439); // 1.0 / 41.0
-        vec2 i  = floor(v + dot(v, C.yy) );
-        vec2 x0 = v -   i + dot(i, C.xx);
-
-        vec2 i1;
-        i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-
-        vec4 x12 = x0.xyxy + C.xxzz;
-        x12.xy -= i1;
-
-        vec3 p = fract(x0.x * C.z + x0.y * C.w, 3.0);
-        vec3 p3 = p.xxx + vec3(C.x, C.x, C.x);
-        vec3 p2 = p.xyzz + vec3(C.y, C.y, C.y);
-        vec3 p1 = p3 * p3;
-        vec3 p0 = p2 * p2;
-
-        return mix(mix(dot(p0, vec3(1.0)), dot(p1, vec3(1.0)), x0.x),
-                   mix(dot(p1, vec3(1.0)), dot(p2, vec3(1.0)), x0.x),
-                   x0.y);
+      // Function to create noise
+      float noise(vec2 st) {
+          return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
       }
 
-      void main(){
-        vec2 st = gl_FragCoord.xy/u_resolution.xy;
+      void main() {
+        vec2 st = gl_FragCoord.xy / u_resolution.xy;
         vec2 pos = (st - 0.5) * 2.0;
-        float t = u_time * u_param1;
 
-        // Procedural Patterns
-        float pattern = sin(st.x * u_param2 + t * u_param3) * cos(st.y * u_param4 + t * u_param5);
-        pattern += snoise(st * u_param6 + t * u_param7) * u_param8;
-        pattern += sin(length(pos) * u_param9 + t * u_param10) * u_param11;
+        float t = u_time * u_param1_fire;
 
-        // Color Mapping
-        vec3 color = vec3(
-          sin(pattern * u_param12) * u_param13,
-          cos(pattern * u_param14) * u_param15,
-          sin(pattern * u_param16) * cos(pattern * u_param17) * u_param18
-        );
+        // Simulate rising flames
+        float flame = exp(-pow(st.y * u_param3_fire - t, 23.0)) * u_param2_fire;
+        flame += sin(st.x * u_param5_fire + t * u_param4_fire) * 0.1;
 
-        // Additional Effects
-        color += vec3(snoise(st * u_param19 + t * u_param20) * u_param21);
-        color *= vec3(0.5 + 0.5 * sin(t * u_param22));
+        // Add noise for flickering
+        flame += noise(st * u_param6_fire + t) * u_param7_fire;
+
+        // Color gradient from yellow to red
+        vec3 color = mix(vec3(1.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), flame);
+
+        // Dynamic color shift
+        color.r += sin(t * u_param8_fire) * 0.05;
 
         // Final Adjustments
-        color = pow(color, vec3(u_param23)); // Gamma Correction
-        color += vec3(u_param24); // Brightness
-        color *= u_param25; // Overall Intensity
+        color = pow(color, vec3(u_param10_fire)); // Gamma Correction
+        color += vec3(u_param9_fire); // Brightness
 
         gl_FragColor = vec4(color, 1.0);
       }
     `
   },
-  particle: {
+  water: {
     vertex: `
       attribute vec4 a_position;
       void main() {
-        gl_PointSize = 2.0;
         gl_Position = a_position;
       }
     `,
@@ -235,57 +194,46 @@ const shaders = {
       uniform vec2 u_resolution;
 
       // Adjustable Parameters
-      uniform float u_param1;
-      uniform float u_param2;
-      uniform float u_param3;
-      uniform float u_param4;
-      uniform float u_param5;
-      uniform float u_param6;
-      uniform float u_param7;
-      uniform float u_param8;
-      uniform float u_param9;
-      uniform float u_param10;
-      uniform float u_param11;
-      uniform float u_param12;
-      uniform float u_param13;
-      uniform float u_param14;
-      uniform float u_param15;
-      uniform float u_param16;
-      uniform float u_param17;
-      uniform float u_param18;
-      uniform float u_param19;
-      uniform float u_param20;
-      uniform float u_param21;
-      uniform float u_param22;
-      uniform float u_param23;
-      uniform float u_param24;
-      uniform float u_param25;
+      uniform float u_param1_water; // Time Speed
+      uniform float u_param2_water; // Ripple Frequency
+      uniform float u_param3_water; // Ripple Amplitude
+      uniform float u_param4_water; // Color Intensity
+      uniform float u_param5_water; // Wave Speed
+      uniform float u_param6_water; // Wave Frequency
+      uniform float u_param7_water; // Wave Amplitude
+      uniform float u_param8_water; // Noise Scale
+      uniform float u_param9_water; // Noise Intensity
+      uniform float u_param10_water; // Gamma Correction
 
-      void main(){
-        vec2 st = gl_FragCoord.xy/u_resolution.xy;
+      // Function to create noise
+      float noise(vec2 st) {
+          return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+      }
+
+      void main() {
+        vec2 st = gl_FragCoord.xy / u_resolution.xy;
         vec2 pos = (st - 0.5) * 2.0;
-        float t = u_time * u_param1;
 
-        // Particle Movement
-        vec2 dir = normalize(vec2(sin(t * u_param2), cos(t * u_param3)));
-        vec2 particlePos = pos + dir * t * u_param4;
+        float t = u_time * u_param1_water;
 
-        // Particle Appearance
-        float dist = length(particlePos);
-        float size = smoothstep(u_param5, u_param5 - 0.01, 1.0 - dist * u_param6);
-        vec3 color = vec3(u_param7, u_param8, u_param9) * size;
+        // Base water color
+        vec3 color = vec3(0.0, 0.3, 0.5);
 
-        // Overlay with Noise
-        float n = fract(sin(dot(st.xy ,vec2(12.9898,78.233))) * 43758.5453) * u_param10;
-        color += vec3(n * u_param11, n * u_param12, n * u_param13);
+        // Add ripples
+        float ripple = sin(distance(st, vec2(0.5)) * u_param2_water - t * u_param3_water);
+        ripple *= u_param4_water;
+        color += vec3(0.0, ripple, ripple);
 
-        // Dynamic Coloring
-        color *= vec3(sin(t * u_param14), cos(t * u_param15), sin(t * u_param16));
+        // Add waves
+        float wave = sin(st.x * u_param6_water + t * u_param5_water) * u_param7_water;
+        color += vec3(wave, wave, 0.0);
+
+        // Add noise for water texture
+        float n = noise(st * u_param8_water + t) * u_param9_water;
+        color += vec3(n, n, n);
 
         // Final Adjustments
-        color = pow(color, vec3(u_param17)); // Gamma Correction
-        color += vec3(u_param18); // Brightness
-        color *= u_param19; // Overall Intensity
+        color = pow(color, vec3(u_param10_water)); // Gamma Correction
 
         gl_FragColor = vec4(color, 1.0);
       }
@@ -296,85 +244,66 @@ const shaders = {
 // Current Shader Selection
 let currentShader = 'intricate';
 
-// Compile Shader
-function compileShader(gl, type, source) {
-  const shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-  if (!success) {
-    console.error('Shader compile failed with:', gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-    return null;
-  }
-  return shader;
-}
-
-// Create Shader Program
-function createProgram(gl, vertexShader, fragmentShader) {
-  const program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
-  const success = gl.getProgramParameter(program, gl.LINK_STATUS);
-  if (!success) {
-    console.error('Program failed to link:', gl.getProgramInfoLog(program));
-    gl.deleteProgram(program);
-    return null;
-  }
-  return program;
-}
-
-// Initialize Shader Program
-let program;
-function initShaderProgram(shaderKey) {
-  const vertexShader = compileShader(gl, gl.VERTEX_SHADER, shaders[shaderKey].vertex);
-  const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, shaders[shaderKey].fragment);
-  program = createProgram(gl, vertexShader, fragmentShader);
-  if (!program) {
-    alert('Failed to initialize shaders.');
-  }
-}
-
-// Initial Shader Setup
-initShaderProgram(currentShader);
-
-// Look Up Attribute and Uniform Locations
-let positionAttributeLocation;
-let resolutionUniformLocation;
-let timeUniformLocation;
+// Shader Program Variable
+let program = null;
 
 // Parameter Definitions
 const parameterDefinitions = [
-  { name: 'u_param1', type: 'range', label: 'Time Speed', min: 0.1, max: 5.0, step: 0.1 },
-  { name: 'u_param2', type: 'range', label: 'Base Gradient X', min: 0.0, max: 2.0, step: 0.1 },
-  { name: 'u_param3', type: 'range', label: 'Base Gradient Y', min: 0.0, max: 2.0, step: 0.1 },
-  { name: 'u_param4', type: 'range', label: 'Base Gradient Z', min: 0.0, max: 2.0, step: 0.1 },
-  { name: 'u_param5', type: 'range', label: 'Wave Frequency', min: 1.0, max: 20.0, step: 0.5 },
-  { name: 'u_param6', type: 'range', label: 'Wave Speed', min: 0.5, max: 5.0, step: 0.1 },
-  { name: 'u_param7', type: 'range', label: 'Wave Amplitude R', min: 0.0, max: 1.0, step: 0.05 },
-  { name: 'u_param8', type: 'range', label: 'Wave Amplitude G', min: 0.0, max: 1.0, step: 0.05 },
-  { name: 'u_param9', type: 'range', label: 'Wave Amplitude B', min: 0.0, max: 1.0, step: 0.05 },
-  { name: 'u_param10', type: 'range', label: 'Wave Offset', min: -1.0, max: 1.0, step: 0.05 },
-  { name: 'u_param11', type: 'range', label: 'Ripple Frequency', min: 1.0, max: 20.0, step: 0.5 },
-  { name: 'u_param12', type: 'range', label: 'Ripple Speed', min: 0.5, max: 5.0, step: 0.1 },
-  { name: 'u_param13', type: 'range', label: 'Ripple Amplitude', min: 0.0, max: 1.0, step: 0.05 },
-  { name: 'u_param14', type: 'color', label: 'Ripple Color R' },
-  { name: 'u_param15', type: 'color', label: 'Ripple Color G' },
-  { name: 'u_param16', type: 'color', label: 'Ripple Color B' },
-  { name: 'u_param17', type: 'range', label: 'Noise Scale', min: 1.0, max: 20.0, step: 0.5 },
-  { name: 'u_param18', type: 'range', label: 'Noise Intensity', min: 0.0, max: 1.0, step: 0.05 },
-  { name: 'u_param19', type: 'range', label: 'Noise Color R', min: 0.0, max: 1.0, step: 0.05 },
-  { name: 'u_param20', type: 'range', label: 'Noise Color G', min: 0.0, max: 1.0, step: 0.05 },
-  { name: 'u_param21', type: 'range', label: 'Noise Color B', min: 0.0, max: 1.0, step: 0.05 },
-  { name: 'u_param22', type: 'range', label: 'Light Flicker Speed', min: 0.5, max: 5.0, step: 0.1 },
-  { name: 'u_param23', type: 'range', label: 'Light Flicker Intensity', min: 0.0, max: 2.0, step: 0.1 },
-  { name: 'u_param24', type: 'range', label: 'Gamma Correction', min: 1.0, max: 3.0, step: 0.1 },
-  { name: 'u_param25', type: 'range', label: 'Brightness Adjustment', min: -1.0, max: 1.0, step: 0.05 },
+  // Intricate Shader Parameters
+  { name: 'u_param1', type: 'range', label: 'Time Speed', min: 0.1, max: 5.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param2', type: 'range', label: 'Base Gradient X', min: 0.0, max: 2.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param3', type: 'range', label: 'Base Gradient Y', min: 0.0, max: 2.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param4', type: 'range', label: 'Base Gradient Z', min: 0.0, max: 2.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param5', type: 'range', label: 'Wave Frequency', min: 1.0, max: 20.0, step: 0.5, shader: 'intricate' },
+  { name: 'u_param6', type: 'range', label: 'Wave Speed', min: 0.5, max: 5.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param7', type: 'range', label: 'Wave Amplitude R', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param8', type: 'range', label: 'Wave Amplitude G', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param9', type: 'range', label: 'Wave Amplitude B', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param10', type: 'range', label: 'Wave Offset', min: -1.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param11', type: 'range', label: 'Ripple Frequency', min: 1.0, max: 20.0, step: 0.5, shader: 'intricate' },
+  { name: 'u_param12', type: 'range', label: 'Ripple Speed', min: 0.5, max: 5.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param13', type: 'range', label: 'Ripple Amplitude', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param14', type: 'range', label: 'Ripple Color R', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param15', type: 'range', label: 'Ripple Color G', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param16', type: 'range', label: 'Ripple Color B', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param17', type: 'range', label: 'Noise Scale', min: 1.0, max: 20.0, step: 0.5, shader: 'intricate' },
+  { name: 'u_param18', type: 'range', label: 'Noise Intensity', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param19', type: 'range', label: 'Noise Color R', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param20', type: 'range', label: 'Noise Color G', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param21', type: 'range', label: 'Noise Color B', min: 0.0, max: 1.0, step: 0.05, shader: 'intricate' },
+  { name: 'u_param22', type: 'range', label: 'Light Flicker Speed', min: 0.5, max: 5.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param23', type: 'range', label: 'Light Flicker Intensity', min: 0.0, max: 2.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param24', type: 'range', label: 'Gamma Correction', min: 1.0, max: 3.0, step: 0.1, shader: 'intricate' },
+  { name: 'u_param25', type: 'range', label: 'Brightness Adjustment', min: -1.0, max: 1.0, step: 0.05, shader: 'intricate' },
+
+  // Fire Shader Parameters
+  { name: 'u_param1_fire', type: 'range', label: 'Time Speed', min: 0.1, max: 5.0, step: 0.1, shader: 'fire' },
+  { name: 'u_param2_fire', type: 'range', label: 'Base Temperature', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param3_fire', type: 'range', label: 'Flame Height', min: 0.0, max: 2.0, step: 0.1, shader: 'fire' },
+  { name: 'u_param4_fire', type: 'range', label: 'Flicker Intensity', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param5_fire', type: 'range', label: 'Flame Width', min: 0.0, max: 2.0, step: 0.1, shader: 'fire' },
+  { name: 'u_param6_fire', type: 'range', label: 'Noise Scale', min: 1.0, max: 20.0, step: 0.5, shader: 'fire' },
+  { name: 'u_param7_fire', type: 'range', label: 'Noise Intensity', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param8_fire', type: 'range', label: 'Color Shift Speed', min: 0.0, max: 5.0, step: 0.1, shader: 'fire' },
+  { name: 'u_param9_fire', type: 'range', label: 'Brightness Adjustment', min: -1.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param10_fire', type: 'range', label: 'Gamma Correction', min: 1.0, max: 3.0, step: 0.1, shader: 'fire' },
+
+  // Water Shader Parameters
+  { name: 'u_param1_water', type: 'range', label: 'Time Speed', min: 0.1, max: 5.0, step: 0.1, shader: 'water' },
+  { name: 'u_param2_water', type: 'range', label: 'Ripple Frequency', min: 1.0, max: 20.0, step: 0.5, shader: 'water' },
+  { name: 'u_param3_water', type: 'range', label: 'Ripple Amplitude', min: 0.0, max: 1.0, step: 0.05, shader: 'water' },
+  { name: 'u_param4_water', type: 'range', label: 'Color Intensity', min: 0.0, max: 1.0, step: 0.05, shader: 'water' },
+  { name: 'u_param5_water', type: 'range', label: 'Wave Speed', min: 0.0, max: 5.0, step: 0.1, shader: 'water' },
+  { name: 'u_param6_water', type: 'range', label: 'Wave Frequency', min: 0.0, max: 10.0, step: 0.1, shader: 'water' },
+  { name: 'u_param7_water', type: 'range', label: 'Wave Amplitude', min: 0.0, max: 1.0, step: 0.05, shader: 'water' },
+  { name: 'u_param8_water', type: 'range', label: 'Noise Scale', min: 1.0, max: 20.0, step: 0.5, shader: 'water' },
+  { name: 'u_param9_water', type: 'range', label: 'Noise Intensity', min: 0.0, max: 1.0, step: 0.05, shader: 'water' },
+  { name: 'u_param10_water', type: 'range', label: 'Gamma Correction', min: 1.0, max: 3.0, step: 0.1, shader: 'water' }
 ];
 
 // Initialize Adjustable Parameters
 let params = {
+  // Intricate Shader Parameters
   u_param1: 1.0,  // Time Speed
   u_param2: 1.0,  // Base Gradient X
   u_param3: 1.0,  // Base Gradient Y
@@ -400,29 +329,114 @@ let params = {
   u_param23: 1.0, // Light Flicker Intensity
   u_param24: 2.2, // Gamma Correction
   u_param25: 0.0, // Brightness Adjustment
+
+  // Fire Shader Parameters
+  u_param1_fire: 1.0,  // Time Speed
+  u_param2_fire: 0.5,  // Base Temperature
+  u_param3_fire: 1.0,  // Flame Height
+  u_param4_fire: 0.5,  // Flicker Intensity
+  u_param5_fire: 1.0,  // Flame Width
+  u_param6_fire: 5.0,  // Noise Scale
+  u_param7_fire: 0.5,  // Noise Intensity
+  u_param8_fire: 1.0,  // Color Shift Speed
+  u_param9_fire: 0.0,  // Brightness Adjustment
+  u_param10_fire: 2.2, // Gamma Correction
+
+  // Water Shader Parameters
+  u_param1_water: 1.0,  // Time Speed
+  u_param2_water: 10.0, // Ripple Frequency
+  u_param3_water: 0.5,  // Ripple Amplitude
+  u_param4_water: 0.5,  // Color Intensity
+  u_param5_water: 2.0,  // Wave Speed
+  u_param6_water: 5.0,  // Wave Frequency
+  u_param7_water: 0.5,  // Wave Amplitude
+  u_param8_water: 5.0,  // Noise Scale
+  u_param9_water: 0.5,  // Noise Intensity
+  u_param10_water: 2.2, // Gamma Correction
 };
 
-// Function to get Uniform Locations
+// Uniform Locations Object
 let uniformLocations = {};
-function getUniformLocations() {
-  positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
-  resolutionUniformLocation = gl.getUniformLocation(program, 'u_resolution');
-  timeUniformLocation = gl.getUniformLocation(program, 'u_time');
 
+// Function to compile shader
+function compileShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+
+  const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+  if (!success) {
+    console.error('Shader compile failed with:', gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    return null;
+  }
+
+  return shader;
+}
+
+// Function to create shader program
+function createProgram(gl, vertexShader, fragmentShader) {
+  if (!vertexShader || !fragmentShader) return null;
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  const success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  if (!success) {
+    console.error('Program failed to link:', gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+    return null;
+  }
+
+  return program;
+}
+
+// Function to initialize shader program
+function initShaderProgram(shaderKey) {
+  const vertexShader = compileShader(gl, gl.VERTEX_SHADER, shaders[shaderKey].vertex);
+  const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, shaders[shaderKey].fragment);
+  program = createProgram(gl, vertexShader, fragmentShader);
+
+  if (!program) {
+    alert('Failed to initialize shaders.');
+    return;
+  }
+
+  gl.useProgram(program);
+  getUniformLocations();
+  setUniforms();
+  setupAttributes();
+}
+
+// Function to get uniform locations
+function getUniformLocations() {
+  uniformLocations = {};
+  uniformLocations['a_position'] = gl.getAttribLocation(program, 'a_position');
+  uniformLocations['u_time'] = gl.getUniformLocation(program, 'u_time');
+  uniformLocations['u_resolution'] = gl.getUniformLocation(program, 'u_resolution');
+
+  // Loop through all adjustable parameters to get their uniform locations
   parameterDefinitions.forEach(param => {
-    uniformLocations[param.name] = gl.getUniformLocation(program, param.name);
+    if (param.shader === currentShader) {
+      const location = gl.getUniformLocation(program, param.name);
+      if (location === null) {
+        console.warn(`Uniform ${param.name} not found in shader ${currentShader}.`);
+      }
+      uniformLocations[param.name] = location;
+    }
   });
 }
 
-// Set Uniforms
+// Function to set uniforms
 function setUniforms() {
   gl.useProgram(program);
-  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+  gl.uniform2f(uniformLocations['u_resolution'], gl.canvas.width, gl.canvas.height);
 }
 
-// Create Buffer
-const positionBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+// Create Buffer and Positions Array (Declared Once)
+const positionBufferObj = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferObj);
 // Fullscreen Quad
 const positionsArray = [
   -1, -1,
@@ -434,21 +448,22 @@ const positionsArray = [
 ];
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positionsArray), gl.STATIC_DRAW);
 
-// Enable Attribute
-gl.enableVertexAttribArray(positionAttributeLocation);
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-gl.vertexAttribPointer(
-  positionAttributeLocation,
-  2,          // size (components per iteration)
-  gl.FLOAT,   // type
-  false,      // normalize
-  0,          // stride
-  0           // offset
-);
+// Enable Attribute (Declared Once)
+function setupAttributes() {
+  gl.enableVertexAttribArray(uniformLocations['a_position']);
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferObj);
+  gl.vertexAttribPointer(
+    uniformLocations['a_position'],
+    2,          // size (components per iteration)
+    gl.FLOAT,   // type
+    false,      // normalize
+    0,          // stride
+    0           // offset
+  );
+}
 
-// Initialize Shader Uniforms
-getUniformLocations();
-setUniforms();
+// Initialize Shader Uniforms and Attributes
+initShaderProgram(currentShader);
 
 // Animation Loop
 let startTime = Date.now();
@@ -457,20 +472,19 @@ function render() {
   const elapsedTime = (currentTime - startTime) / 1000.0;
 
   gl.useProgram(program);
-  gl.uniform1f(timeUniformLocation, elapsedTime);
+  gl.uniform1f(uniformLocations['u_time'], elapsedTime);
 
   // Update All Parameter Uniforms
   parameterDefinitions.forEach(param => {
-    if (uniformLocations[param.name] !== null) {
-      if (param.type === 'color') {
-        // For color parameters, combine R, G, B into a single vec3
-        const r = params['u_param14'];
-        const g = params['u_param15'];
-        const b = params['u_param16'];
-        gl.uniform3f(uniformLocations[param.name], r, g, b);
-      } else {
+    if (param.shader === currentShader && uniformLocations[param.name] !== null) {
+      if (param.type === 'range') {
         gl.uniform1f(uniformLocations[param.name], params[param.name]);
       }
+      // If you have color parameters as separate floats, handle them here
+      // For example:
+      // if (param.type === 'color') {
+      //   gl.uniform1f(uniformLocations[param.name], params[param.name]);
+      // }
     }
   });
 
@@ -495,34 +509,12 @@ fullscreenBtn.addEventListener('click', () => {
 // Generate UI Controls
 const parametersContainer = document.getElementById('parameters');
 
-// Helper Functions for Color Parameters
-function getColorFromParams(paramName) {
-  switch (paramName) {
-    case 'u_param14':
-      return { r: params.u_param14, g: 0, b: 0 };
-    case 'u_param15':
-      return { r: 0, g: params.u_param15, b: 0 };
-    case 'u_param16':
-      return { r: 0, g: 0, b: params.u_param16 };
-    default:
-      return { r: 0, g: 0, b: 0 };
-  }
-}
-
-function setColorParams(paramName, rgb) {
-  switch (paramName) {
-    case 'u_param14':
-      params.u_param14 = rgb.r;
-      break;
-    case 'u_param15':
-      params.u_param15 = rgb.g;
-      break;
-    case 'u_param16':
-      params.u_param16 = rgb.b;
-      break;
-    default:
-      break;
-  }
+// Helper Functions
+function rgbToHex(r, g, b) {
+  return "#" + [r, g, b].map(x => {
+    const hex = Math.round(x * 255).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('');
 }
 
 function hexToRgb(hex) {
@@ -535,13 +527,6 @@ function hexToRgb(hex) {
   let b = (bigint & 255) / 255;
 
   return { r, g, b };
-}
-
-function rgbToHex(r, g, b) {
-  return "#" + [r, g, b].map(x => {
-    const hex = Math.round(x * 255).toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  }).join('');
 }
 
 // Helper Function to Count Decimal Places
@@ -559,7 +544,8 @@ function formatParamValue(param) {
   if (param.type === 'range') {
     return params[param.name].toFixed(getDecimalPlaces(param.step));
   } else if (param.type === 'color') {
-    const rgb = getColorFromParams(param.name);
+    // Assuming color is represented as separate floats, display as hex
+    const rgb = { r: params[param.name], g: params[param.name], b: params[param.name] };
     return rgbToHex(rgb.r, rgb.g, rgb.b);
   }
   return '';
@@ -591,13 +577,16 @@ function createParameterControl(param) {
     input = document.createElement('input');
     input.type = 'color';
     input.id = param.name;
-    // Initialize color based on RGB parameters
-    const rgb = getColorFromParams(param.name);
-    input.value = rgbToHex(rgb.r, rgb.g, rgb.b);
+    // Initialize color based on the parameter value
+    const hex = rgbToHex(params[param.name], params[param.name], params[param.name]);
+    input.value = hex;
     input.addEventListener('input', (e) => {
       const hex = e.target.value;
       const rgb = hexToRgb(hex);
-      setColorParams(param.name, rgb);
+      // Assuming color parameters are separate, set each accordingly
+      if (param.name === 'u_param14') params.u_param14 = rgb.r;
+      if (param.name === 'u_param15') params.u_param15 = rgb.g;
+      if (param.name === 'u_param16') params.u_param16 = rgb.b;
       label.textContent = `${param.label}: ${hex}`;
     });
   }
@@ -607,33 +596,44 @@ function createParameterControl(param) {
   return group;
 }
 
+// Determine if a parameter is relevant for the current shader
+function isParamRelevant(paramName) {
+  const param = parameterDefinitions.find(p => p.name === paramName);
+  if (!param) return false;
+  return param.shader === currentShader;
+}
+
 // Generate and Append All Parameter Controls
 function generateParameterControls() {
   // Clear existing controls
   parametersContainer.innerHTML = '';
   parameterDefinitions.forEach(param => {
-    const control = createParameterControl(param);
-    parametersContainer.appendChild(control);
+    if (isParamRelevant(param.name)) {
+      const control = createParameterControl(param);
+      parametersContainer.appendChild(control);
+    }
   });
 }
 
-// Initialize with Intricate Shader Parameters
+// Initialize Parameters with Current Shader's Defaults
 function initializeDefaultParameters() {
   parameterDefinitions.forEach(param => {
-    if (param.type === 'range') {
-      const slider = document.getElementById(param.name);
-      if (slider) {
-        slider.value = params[param.name];
-        const label = slider.previousSibling;
-        label.textContent = `${param.label}: ${params[param.name].toFixed(getDecimalPlaces(param.step))}`;
-      }
-    } else if (param.type === 'color') {
-      const colorInput = document.getElementById(param.name);
-      if (colorInput) {
-        const rgb = getColorFromParams(param.name);
-        colorInput.value = rgbToHex(rgb.r, rgb.g, rgb.b);
-        const label = colorInput.previousSibling;
-        label.textContent = `${param.label}: ${colorInput.value}`;
+    if (isParamRelevant(param.name)) {
+      if (param.type === 'range') {
+        const slider = document.getElementById(param.name);
+        if (slider) {
+          slider.value = params[param.name];
+          const label = slider.previousSibling;
+          label.textContent = `${param.label}: ${params[param.name].toFixed(getDecimalPlaces(param.step))}`;
+        }
+      } else if (param.type === 'color') {
+        const colorInput = document.getElementById(param.name);
+        if (colorInput) {
+          const rgb = { r: params[param.name], g: params[param.name], b: params[param.name] };
+          colorInput.value = rgbToHex(rgb.r, rgb.g, rgb.b);
+          const label = colorInput.previousSibling;
+          label.textContent = `${param.label}: ${colorInput.value}`;
+        }
       }
     }
   });
@@ -644,8 +644,6 @@ const shaderSelect = document.getElementById('shader-select');
 shaderSelect.addEventListener('change', (e) => {
   currentShader = e.target.value;
   initShaderProgram(currentShader);
-  getUniformLocations();
-  setUniforms();
   generateParameterControls();
   initializeDefaultParameters();
 });
@@ -653,6 +651,82 @@ shaderSelect.addEventListener('change', (e) => {
 // Initial Setup
 generateParameterControls();
 initializeDefaultParameters();
+
+// Export Functionality
+const exportBtn = document.getElementById('export-btn');
+const exportModal = document.getElementById('export-modal');
+const closeButton = document.querySelector('.close-button');
+const startExportBtn = document.getElementById('start-export-btn');
+
+exportBtn.addEventListener('click', () => {
+  exportModal.style.display = 'block';
+});
+
+closeButton.addEventListener('click', () => {
+  exportModal.style.display = 'none';
+});
+
+window.addEventListener('click', (event) => {
+  if (event.target == exportModal) {
+    exportModal.style.display = 'none';
+  }
+});
+
+startExportBtn.addEventListener('click', () => {
+  const format = document.getElementById('export-format').value;
+  const duration = parseInt(document.getElementById('export-duration').value, 10);
+  if (isNaN(duration) || duration <= 0) {
+    alert('Please enter a valid duration.');
+    return;
+  }
+  if (format === 'gif') {
+    exportGIF(duration);
+  }
+  // Removed MP4 export due to compatibility issues
+  exportModal.style.display = 'none';
+});
+
+// Export as GIF using gif.js
+function exportGIF(duration) {
+  const gif = new GIF({
+    workers: 2,
+    quality: 10,
+    workerScript: 'js/gif.worker.js' // Ensure this path is correct
+  });
+
+  const fps = 30;
+  const totalFrames = duration * fps;
+  let frame = 0;
+
+  const captureFrame = () => {
+    if (frame >= totalFrames) {
+      gif.render();
+      return;
+    }
+    gif.addFrame(canvas, { copy: true, delay: 1000 / fps });
+    frame++;
+    requestAnimationFrame(captureFrame);
+  };
+
+  gif.on('finished', function(blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `dreamshader_export_${Date.now()}.gif`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+  });
+
+  captureFrame();
+}
+
+// Donation Button Functionality
+const donateBtn = document.getElementById('donate-btn');
+donateBtn.addEventListener('click', () => {
+  window.open('https://ko-fi.com/justinmunsell', '_blank'); // Replace with your actual donation link
+});
 
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
