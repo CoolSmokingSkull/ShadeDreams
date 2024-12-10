@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shader Creator PWA</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121212">
+</head>
+<body>
+  <header>
+    <h1>Shader Creator</h1>
+    <button id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+  </header>
+
+  <main>
+    <aside id="controls">
+      <h2>Parameters</h2>
+      <div id="parameters">
+        <!-- Dynamic Parameters Will Be Injected Here -->
+      </div>
+    </aside>
+    <section id="preview">
+      <canvas id="glcanvas"></canvas>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 Shader Creator</p>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
