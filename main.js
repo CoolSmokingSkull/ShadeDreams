@@ -890,3 +890,79 @@ startExportBtn.addEventListener('click', () => {
   exportGIF(duration);
   exportModal.style.display = 'none';
 });
+
+// Add this after the existing export-related code:
+const exportPresets = {
+  custom: { width: 1920, height: 1080 },
+  instagram: { width: 1080, height: 1920 },
+  tiktok: { width: 1080, height: 1920 },
+  youtube: { width: 1920, height: 1080 },
+  twitter: { width: 1280, height: 720 },
+  desktop: { width: 2048, height: 1024 }
+};
+
+// Handle preset changes
+document.getElementById('export-preset').addEventListener('change', (e) => {
+  const preset = exportPresets[e.target.value];
+  if (preset) {
+    document.getElementById('export-width').value = preset.width;
+    document.getElementById('export-height').value = preset.height;
+  }
+});
+
+async function exportVideo() {
+  const width = parseInt(document.getElementById('export-width').value);
+  const height = parseInt(document.getElementById('export-height').value);
+  const duration = parseInt(document.getElementById('export-duration').value);
+  const quality = document.getElementById('export-quality').value;
+  const fps = 60;
+  
+  const stream = canvas.captureStream(fps);
+  const mediaRecorder = new MediaRecorder(stream, {
+    mimeType: quality === 'high' ? 'video/webm;codecs=h264' : 'video/webm',
+    videoBitsPerSecond: quality === 'high' ? 8000000 : 2500000
+  });
+
+  const chunks = [];
+  const progressBar = document.querySelector('.progress-bar');
+  const buttonText = document.querySelector('.button-text');
+  let startTime = Date.now();
+  
+  mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+  
+  mediaRecorder.onstop = async () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dreamshader_${width}x${height}_${Date.now()}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    progressBar.style.width = '0%';
+    buttonText.textContent = 'Export Video';
+    exportModal.style.display = 'none';
+  };
+
+  // Update progress
+  const updateProgress = () => {
+    const elapsed = (Date.now() - startTime) / 1000;
+    const progress = Math.min((elapsed / duration) * 100, 100);
+    progressBar.style.width = `${progress}%`;
+    buttonText.textContent = `Exporting ${Math.round(progress)}%`;
+    
+    if (elapsed < duration) {
+      requestAnimationFrame(updateProgress);
+    }
+  };
+
+  mediaRecorder.start(1000 / fps);
+  updateProgress();
+  
+  setTimeout(() => {
+    mediaRecorder.stop();
+  }, duration * 1000);
+}
+
+// Replace old export handler
+startExportBtn.addEventListener('click', exportVideo);

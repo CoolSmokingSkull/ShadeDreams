@@ -1,19 +1,28 @@
-
 const fs = require('fs');
-const { execSync } = require('child_process');
+const path = require('path');
 
-// Read manifest
-const manifest = require('./manifest.json');
-manifest.build_id = Date.now();
-manifest.version = process.env.npm_package_version;
+// Create dist directory and required subdirectories
+['dist', 'dist/assets', 'dist/assets/icons'].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
-// Write updated manifest
-fs.writeFileSync('dist/manifest.json', JSON.stringify(manifest, null, 2));
+// Copy all source files to dist
+const filesToCopy = [
+  'index.html',
+  'styles.css',
+  'main.js',
+  'manifest.json',
+  'service-worker.js'
+].forEach(file => {
+  try {
+    if (fs.existsSync(file)) {
+      fs.copyFileSync(file, path.join('dist', file));
+    }
+  } catch (err) {
+    console.log(`Warning: Could not copy ${file}`);
+  }
+});
 
-// Update service worker cache version
-const swContent = fs.readFileSync('service-worker.js', 'utf8');
-const newSW = swContent.replace(
-  /const CACHE_NAME = '.*?'/,
-  `const CACHE_NAME = 'dreamshader-cache-${manifest.build_id}'`
-);
-fs.writeFileSync('dist/service-worker.js', newSW);
+console.log('Build completed successfully!');

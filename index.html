@@ -49,10 +49,49 @@
   <div id="export-modal" class="modal">
     <div class="modal-content">
       <span class="close-button">&times;</span>
-      <h2>Export Shader Animation</h2>
-      <label for="export-duration">Duration (seconds):</label>
-      <input type="number" id="export-duration" min="1" max="60" value="5">
-      <button id="start-export-btn">Export as GIF</button>
+      <h2>Export Video</h2>
+      
+      <div class="export-settings">
+        <div class="setting-group">
+          <label for="export-preset">Preset:</label>
+          <select id="export-preset">
+            <option value="custom">Custom</option>
+            <option value="instagram">Instagram Story (1080x1920)</option>
+            <option value="tiktok">TikTok (1080x1920)</option>
+            <option value="youtube">YouTube (1920x1080)</option>
+            <option value="twitter">Twitter (1280x720)</option>
+            <option value="desktop">Desktop (2048x1024)</option>
+          </select>
+        </div>
+
+        <div class="setting-group custom-size">
+          <label>Resolution:</label>
+          <div class="resolution-inputs">
+            <input type="number" id="export-width" placeholder="Width" min="100" max="4096" value="1920">
+            <span>×</span>
+            <input type="number" id="export-height" placeholder="Height" min="100" max="4096" value="1080">
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label for="export-duration">Duration (seconds):</label>
+          <input type="number" id="export-duration" min="1" max="300" value="10">
+        </div>
+
+        <div class="setting-group">
+          <label for="export-quality">Quality:</label>
+          <select id="export-quality">
+            <option value="high">High (H.264)</option>
+            <option value="medium">Medium (VP8)</option>
+            <option value="low">Low (WebM)</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="start-export-btn" class="progress-button">
+        <span class="button-text">Export Video</span>
+        <div class="progress-bar"></div>
+      </button>
     </div>
   </div>
 

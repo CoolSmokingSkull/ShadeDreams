@@ -1,15 +1,11 @@
-
 [build]
-  command = "npm run build"
-  publish = "dist"
+  publish = "."  # Deploy from root instead of dist
+  command = ""   # No build command needed for now
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[build.environment]
-  NODE_VERSION = "16"
 
 [build.processing]
   skip_processing = false
