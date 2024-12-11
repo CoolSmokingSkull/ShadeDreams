@@ -10,9 +10,12 @@ if (!gl) {
 
 // Resize Canvas to Fit Window
 function resizeCanvas() {
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
-  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  const preview = document.getElementById('preview');
+  const rect = preview.getBoundingClientRect();
+  
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  gl.viewport(0, 0, canvas.width, canvas.height);
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -136,46 +139,76 @@ const shaders = {
       uniform float u_time;
       uniform vec2 u_resolution;
 
-      // Adjustable Parameters
-      uniform float u_param1_fire; // Time Speed
-      uniform float u_param2_fire; // Base Temperature
-      uniform float u_param3_fire; // Flame Height
-      uniform float u_param4_fire; // Flicker Intensity
-      uniform float u_param5_fire; // Flame Width
-      uniform float u_param6_fire; // Noise Scale
-      uniform float u_param7_fire; // Noise Intensity
-      uniform float u_param8_fire; // Color Shift Speed
-      uniform float u_param9_fire; // Brightness Adjustment
+      uniform float u_param1_fire;  // Time Speed
+      uniform float u_param2_fire;  // Base Temperature
+      uniform float u_param3_fire;  // Flame Height
+      uniform float u_param4_fire;  // Flicker Intensity
+      uniform float u_param5_fire;  // Flame Width
+      uniform float u_param6_fire;  // Noise Scale
+      uniform float u_param7_fire;  // Noise Intensity
+      uniform float u_param8_fire;  // Color Shift Speed
+      uniform float u_param9_fire;  // Brightness
       uniform float u_param10_fire; // Gamma Correction
+      uniform float u_param11_fire;  // Base Red
+      uniform float u_param12_fire;  // Base Green
+      uniform float u_param13_fire;  // Base Blue
+      uniform float u_param14_fire;  // Flicker Red
+      uniform float u_param15_fire;  // Flicker Green
+      uniform float u_param16_fire;  // Flicker Blue
 
-      // Function to create noise
+      float random(vec2 st) {
+        return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+      }
+
       float noise(vec2 st) {
-          return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        vec2 i = floor(st);
+        vec2 f = fract(st);
+        
+        float a = random(i);
+        float b = random(i + vec2(1.0, 0.0));
+        float c = random(i + vec2(0.0, 1.0));
+        float d = random(i + vec2(1.0, 1.0));
+
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
       }
 
       void main() {
-        vec2 st = gl_FragCoord.xy / u_resolution.xy;
-        vec2 pos = (st - 0.5) * 2.0;
-
+        vec2 st = gl_FragCoord.xy/u_resolution.xy;
         float t = u_time * u_param1_fire;
-
-        // Simulate rising flames
-        float flame = exp(-pow(st.y * u_param3_fire - t, 23.0)) * u_param2_fire;
-        flame += sin(st.x * u_param5_fire + t * u_param4_fire) * 0.1;
-
-        // Add noise for flickering
-        flame += noise(st * u_param6_fire + t) * u_param7_fire;
-
-        // Color gradient from yellow to red
-        vec3 color = mix(vec3(1.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), flame);
-
+        
+        // Base shape
+        float y = 1.0 - st.y;
+        float flameShape = pow(y * u_param3_fire, 1.5) * u_param2_fire;
+        
+        // Add horizontal variation
+        float xOffset = (st.x - 0.5) * u_param5_fire;
+        flameShape *= exp(-xOffset * xOffset * 8.0);
+        
+        // Enhanced noise and movement
+        vec2 noisePos = st * u_param6_fire;
+        noisePos.y -= t * 0.5;
+        float n = noise(noisePos) * u_param7_fire;
+        
+        // Add flicker
+        float flicker = sin(t * 5.0) * u_param4_fire * 0.5 + 0.5;
+        
+        // Combine effects
+        float intensity = flameShape + n * flicker;
+        
+        // Color gradient with new parameters
+        vec3 baseColor = vec3(u_param11_fire, u_param12_fire, u_param13_fire);
+        vec3 flickerColor = vec3(u_param14_fire, u_param15_fire, u_param16_fire);
+        vec3 color = mix(baseColor, flickerColor, intensity);
+        
         // Dynamic color shift
-        color.r += sin(t * u_param8_fire) * 0.05;
-
-        // Final Adjustments
-        color = pow(color, vec3(u_param10_fire)); // Gamma Correction
-        color += vec3(u_param9_fire); // Brightness
-
+        float shift = sin(t * u_param8_fire) * 0.1;
+        color.r = min(1.0, color.r + shift);
+        
+        // Apply gamma and brightness
+        color = pow(color * intensity, vec3(1.0 / u_param10_fire));
+        color *= 1.0 + u_param9_fire;
+        
         gl_FragColor = vec4(color, 1.0);
       }
     `
@@ -287,6 +320,12 @@ const parameterDefinitions = [
   { name: 'u_param8_fire', type: 'range', label: 'Color Shift Speed', min: 0.0, max: 5.0, step: 0.1, shader: 'fire' },
   { name: 'u_param9_fire', type: 'range', label: 'Brightness Adjustment', min: -1.0, max: 1.0, step: 0.05, shader: 'fire' },
   { name: 'u_param10_fire', type: 'range', label: 'Gamma Correction', min: 1.0, max: 3.0, step: 0.1, shader: 'fire' },
+  { name: 'u_param11_fire', type: 'range', label: 'Base Red', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param12_fire', type: 'range', label: 'Base Green', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param13_fire', type: 'range', label: 'Base Blue', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param14_fire', type: 'range', label: 'Flicker Red', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param15_fire', type: 'range', label: 'Flicker Green', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
+  { name: 'u_param16_fire', type: 'range', label: 'Flicker Blue', min: 0.0, max: 1.0, step: 0.05, shader: 'fire' },
 
   // Water Shader Parameters
   { name: 'u_param1_water', type: 'range', label: 'Time Speed', min: 0.1, max: 5.0, step: 0.1, shader: 'water' },
@@ -331,16 +370,22 @@ let params = {
   u_param25: 0.0, // Brightness Adjustment
 
   // Fire Shader Parameters
-  u_param1_fire: 1.0,  // Time Speed
-  u_param2_fire: 0.5,  // Base Temperature
-  u_param3_fire: 1.0,  // Flame Height
-  u_param4_fire: 0.5,  // Flicker Intensity
-  u_param5_fire: 1.0,  // Flame Width
-  u_param6_fire: 5.0,  // Noise Scale
-  u_param7_fire: 0.5,  // Noise Intensity
-  u_param8_fire: 1.0,  // Color Shift Speed
-  u_param9_fire: 0.0,  // Brightness Adjustment
-  u_param10_fire: 2.2, // Gamma Correction
+  u_param1_fire: 1.0,    // Time Speed
+  u_param2_fire: 0.8,    // Base Temperature
+  u_param3_fire: 1.2,    // Flame Height
+  u_param4_fire: 0.3,    // Flicker Intensity
+  u_param5_fire: 1.5,    // Flame Width
+  u_param6_fire: 8.0,    // Noise Scale
+  u_param7_fire: 0.7,    // Noise Intensity
+  u_param8_fire: 2.0,    // Color Shift Speed
+  u_param9_fire: 0.2,    // Brightness
+  u_param10_fire: 1.8,   // Gamma Correction
+  u_param11_fire: 1.0,    // Base Red
+  u_param12_fire: 0.2,    // Base Green
+  u_param13_fire: 0.0,    // Base Blue
+  u_param14_fire: 1.0,    // Flicker Red
+  u_param15_fire: 0.7,    // Flicker Green
+  u_param16_fire: 0.0,    // Flicker Blue
 
   // Water Shader Parameters
   u_param1_water: 1.0,  // Time Speed
@@ -495,16 +540,97 @@ requestAnimationFrame(render);
 
 // Handle Fullscreen Toggle
 const fullscreenBtn = document.getElementById('fullscreen-btn');
-fullscreenBtn.addEventListener('click', () => {
-  const previewSection = document.getElementById('preview');
+const previewSection = document.getElementById('preview');
+
+// Enhanced fullscreen handling
+function toggleFullScreen() {
+  const preview = document.getElementById('preview');
+  const canvas = document.getElementById('glcanvas');
+  const fullscreenBtn = document.getElementById('fullscreen-btn');
+  
   if (!document.fullscreenElement) {
-    previewSection.requestFullscreen().catch(err => {
-      alert(`Error attempting to enable full-screen mode: ${err.message}`);
-    });
+    // Enter fullscreen
+    preview.classList.add('fullscreen-mode');
+    fullscreenBtn.classList.add('in-fullscreen');
+    
+    try {
+      // Try all possible fullscreen methods
+      if (preview.requestFullscreen) {
+        preview.requestFullscreen();
+      } else if (preview.webkitRequestFullscreen) {
+        preview.webkitRequestFullscreen();
+      } else if (preview.mozRequestFullScreen) {
+        preview.mozRequestFullScreen();
+      } else if (preview.msRequestFullscreen) {
+        preview.msRequestFullscreen();
+      }
+      
+      // Move button to preview section
+      preview.appendChild(fullscreenBtn);
+      
+      // Ensure proper canvas size
+      setTimeout(() => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }, 100);
+      
+    } catch (err) {
+      console.error('Fullscreen failed:', err);
+    }
   } else {
-    document.exitFullscreen();
+    // Exit fullscreen
+    preview.classList.remove('fullscreen-mode');
+    fullscreenBtn.classList.remove('in-fullscreen');
+    
+    try {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      
+      // Move button back to toolbar
+      const toolbar = document.querySelector('.toolbar');
+      toolbar.appendChild(fullscreenBtn);
+      
+      // Reset canvas size
+      resizeCanvas();
+      
+    } catch (err) {
+      console.error('Exit fullscreen failed:', err);
+    }
   }
+}
+
+// Add fullscreen change event listener
+document.addEventListener('fullscreenchange', handleFullscreenChange);
+document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+function handleFullscreenChange() {
+  const preview = document.getElementById('preview');
+  if (!document.fullscreenElement) {
+    preview.classList.remove('fullscreen-mode');
+    const toolbar = document.querySelector('.toolbar');
+    toolbar.appendChild(fullscreenBtn);
+    resizeCanvas();
+  }
+}
+
+// Add orientation change handler for mobile
+window.addEventListener('orientationchange', () => {
+  setTimeout(resizeCanvas, 300); // Delay to ensure proper resize after orientation change
 });
+
+// Prevent bounce scrolling on iOS
+document.body.addEventListener('touchmove', (e) => {
+  if (e.target.closest('#controls')) return;
+  e.preventDefault();
+}, { passive: false });
 
 // Generate UI Controls
 const parametersContainer = document.getElementById('parameters');
@@ -569,9 +695,20 @@ function createParameterControl(param) {
     input.max = param.max;
     input.step = param.step;
     input.value = params[param.name];
+    
+    // Add value percent for gradient
+    const updateSliderBackground = (value) => {
+      const percent = ((value - param.min) / (param.max - param.min)) * 100;
+      input.style.setProperty('--value-percent', `${percent}%`);
+    };
+    
+    updateSliderBackground(input.value);
+    
     input.addEventListener('input', (e) => {
-      params[param.name] = parseFloat(e.target.value);
-      label.textContent = `${param.label}: ${params[param.name].toFixed(getDecimalPlaces(param.step))}`;
+      const value = parseFloat(e.target.value);
+      params[param.name] = value;
+      label.textContent = `${param.label}: ${value.toFixed(getDecimalPlaces(param.step))}`;
+      updateSliderBackground(value);
     });
   } else if (param.type === 'color') {
     input = document.createElement('input');
@@ -673,16 +810,12 @@ window.addEventListener('click', (event) => {
 });
 
 startExportBtn.addEventListener('click', () => {
-  const format = document.getElementById('export-format').value;
   const duration = parseInt(document.getElementById('export-duration').value, 10);
   if (isNaN(duration) || duration <= 0) {
     alert('Please enter a valid duration.');
     return;
   }
-  if (format === 'gif') {
-    exportGIF(duration);
-  }
-  // Removed MP4 export due to compatibility issues
+  exportGIF(duration);
   exportModal.style.display = 'none';
 });
 
@@ -740,3 +873,20 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+
+// Remove fullscreen button code and add UI toggle
+const toggleUIBtn = document.getElementById('toggle-ui');
+toggleUIBtn.addEventListener('click', () => {
+  document.body.classList.toggle('hide-ui');
+});
+
+// Update export functionality to only use GIF
+startExportBtn.addEventListener('click', () => {
+  const duration = parseInt(document.getElementById('export-duration').value, 10);
+  if (isNaN(duration) || duration <= 0) {
+    alert('Please enter a valid duration.');
+    return;
+  }
+  exportGIF(duration);
+  exportModal.style.display = 'none';
+});

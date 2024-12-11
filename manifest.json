@@ -1,6 +1,8 @@
 {
   "short_name": "DreamShader",
-  "name": "DreamShader - Dynamic Shader Creator PWA",
+  "name": "DreamShader - Dynamic Shader Dreams",
+  "version": "0.8.4",
+  "build_id": "BUILD_TIMESTAMP",
   "icons": [
     {
       "src": "assets/icons/DS192.png",
